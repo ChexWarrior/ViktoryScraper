@@ -111,6 +111,7 @@ class LogParser {
         $turnCount += 1;
         $newLog[$turnCount] = array(
           'player' => $matches[1],
+          'turn' => $turnCount,
           'actions' => array(),
         );
       } else {
