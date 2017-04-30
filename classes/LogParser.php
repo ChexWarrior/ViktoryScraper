@@ -20,14 +20,25 @@ class LogParser {
       $child = $html->firstChild();
       
       do {
-        echo $child->getTag()->name() . PHP_EOL;
+        $childTag = $child->getTag()->name();
+
+        // if font we need to extract the color
+        if($childTag == 'font') {
+          $text = "[{$child->getAttribute('style')}]: {$child->text}";
+        } else {
+          $text = $child->text;
+        }
+
+        echo $text . PHP_EOL;
 
         try {
           $child = $child->nextSibling();
         } catch(Exception $e) {
-          break;
+          $child = null;
         }
-      } while(!empty($child));
+
+        $text = '';
+      } while($child != null);
     }
   }
 }
