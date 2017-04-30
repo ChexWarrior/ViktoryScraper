@@ -53,10 +53,21 @@ class LogParser {
 
     foreach($log as $line) {
       $actions = explode('.', $line);
+      $newLog = array_merge($newLog, $actions);
+    }
 
-      foreach($actions as $action) {
+    return $newLog;
+  }
+
+  private function cleanLog($log) {
+    $newLog = array();
+
+    foreach($log as $action) {
+      if(!empty(trim($action))) {
+        $action = str_replace('&nbsp;', ' ', $action);
+        $action = preg_replace('/\,{2,}/', '', $action);
+        $action = str_replace(' - ', '', $action);
         echo $action . PHP_EOL;
-        array_push($actions, $action);
       }
     }
 
