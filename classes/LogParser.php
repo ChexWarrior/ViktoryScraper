@@ -8,7 +8,8 @@ class LogParser {
 
   public function __construct($rawLog) {
     $this->log = $rawLog;
-    $this->parseHTML($this->log);
+    $this->log = $this->parseHTML($this->log);
+    $this->log = $this->separateLogByAction($this->log);
   }
 
   // pulls text out of html
@@ -27,12 +28,10 @@ class LogParser {
 
         // if font we need to extract the color
         if($childTag == 'font') {
-          $text = "[{$child->getAttribute('style')}]: {$child->text}";
+          $text .= "[{$child->getAttribute('style')}]: {$child->text}";
         } else {
-          $text = $child->text;
+          $text .= trim($child->text);
         }
-
-        echo $text . PHP_EOL;
 
         try {
           $child = $child->nextSibling();
@@ -40,8 +39,26 @@ class LogParser {
           $child = null;
         }
 
-        $text = '';
       } while($child != null);
+
+      if(!empty($text)) array_push($log, $text);
     }
+
+    return $log;
+  }
+
+  private function separateLogByAction($log) {
+    $newLog = array();
+
+    foreach($log as $line) {
+      $actions = explode('.', $line);
+
+      foreach($actions as $action) {
+        echo $action . PHP_EOL;
+        array_push($actions, $action);
+      }
+    }
+
+    return $newLog;
   }
 }
