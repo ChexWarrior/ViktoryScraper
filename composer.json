@@ -1,0 +1,13 @@
+{
+    "name": "andy/viktory-scraper-ii",
+    "type": "project",
+    "require": {
+        "paquettg/php-html-parser": "^1.7"
+    },
+    "authors": [
+        {
+            "name": "Andrew Lehman",
+            "email": "aplehm@gmail.com"
+        }
+    ]
+}
