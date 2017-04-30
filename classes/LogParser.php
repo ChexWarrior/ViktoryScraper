@@ -10,6 +10,7 @@ class LogParser {
     $this->log = $rawLog;
     $this->log = $this->parseHTML($this->log);
     $this->log = $this->separateLogByAction($this->log);
+    $this->log = $this->cleanLog($this->log);
   }
 
   // pulls text out of html
