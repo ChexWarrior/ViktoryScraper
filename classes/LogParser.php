@@ -46,7 +46,7 @@ class LogParser {
 
       } while($child != null);
 
-      if(!empty($text)) array_push($log, $text);
+      if(!empty($text)) $log[] = $text;
     }
 
     return $log;
