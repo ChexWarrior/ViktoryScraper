@@ -11,10 +11,13 @@ class LogParser {
     $this->parseHTML($this->log);
   }
 
+  // pulls text out of html
   private function parseHTML($rawLog) {
     $dom = new Dom;
+    $log = array();
 
     foreach($rawLog as $line) {
+      $text = '';
       $dom->load($line);
       $html = $dom->find('font', 0);
       $child = $html->firstChild();
