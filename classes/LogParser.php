@@ -14,8 +14,8 @@ class LogParser {
     $this->log = $this->separateLogByAction($this->log);
     $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
     $this->log = $this->cleanLog($this->log);
-    $this->log = $this->separateLogByTurn($this->log);
-    $this->log = $this->determineRounds($this->log, $this->playerInfo);
+    $this->log = $this->groupActionsByPlayer($this->log);
+    $this->log = $this->determineGameTime($this->log, $this->playerInfo);
     echo json_encode($this->log);
   }
 
@@ -161,7 +161,7 @@ class LogParser {
     return $log;
   }
 
-  private function separateLogByTurn($log) {
+  private function groupActionsByPlayer($log) {
     $newLog = array();
     $turnStartPattern = '/^BEGINNING OF TURN for ([a-zA-Z]+)/';
     $turnCount = -1;
@@ -183,7 +183,7 @@ class LogParser {
     return $newLog;
   }
 
-  private function determineRounds($log, $playerInfo) {
+  private function determineGameTime($log, $playerInfo) {
     $turnCount = 0;
     $roundCount = 0;
     $turnOrder = array();
