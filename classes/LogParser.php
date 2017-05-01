@@ -173,7 +173,6 @@ class LogParser {
         $turnCount += 1;
         $newLog[$turnCount] = array(
           'color' => $matches[1],
-          'turn' => $turnCount,
           'actions' => array(),
         );
       } else {
@@ -182,5 +181,64 @@ class LogParser {
     }
 
     return $newLog;
+  }
+
+  private function determineRounds($log, $playerInfo) {
+    $turnCount = 0;
+    $roundCount = 0;
+    $turnOrder = array();
+    $nextExpectedPlayer = false;
+    $processedLog = array();
+
+    // determine turn order of players
+    for($index = 0; $index < count($playerInfo); $index += 1) {
+      $prevPlayer = ($index - 1 < 0) 
+                  ? $playerInfo[count($playerInfo) - 1]
+                  : $playerInfo[$index - 1];
+
+      $nextPlayer = ($index + 1 > count($playerInfo) - 1)
+                  ? $playerInfo[0]
+                  : $playerInfo[$index + 1];
+
+      $turnOrder[$playerInfo[$index]['color']] = array(
+        'isFirst' => $index == 0,
+        'next' => $nextPlayer['color'],
+        'prev' => $prevPlayer['color'],
+      ); 
+    }
+
+    foreach($log as $playerTurn) {
+      $currentPlayer = $playerTurn['color'];
+
+      // if current player is not equal to what was expected last turn
+      // then a player has been eliminated and order must be changed
+      if($nextExpectedPlayer && $nextExpectedPlayer != $currentPlayer) {
+        $turnOrder[$lastPlayer]['next'] = $currentPlayer;
+
+        // if the expected player was first make this player the first player
+        if(!$turnOrder[$currentPlayer]['isFirst']) {
+          $turnOrder[$currentPlayer]['isFirst'] = 
+            $turnOrder[$nextExpectedPlayer]['isFirst'] ? true : false;
+        }
+
+        unset($turnOrder[$nextExpectedPlayer]);
+      }
+
+      // pull next player color for comparison on next iteration
+      $lastPlayer = $currentPlayer;
+      $nextExpectedPlayer = $turnOrder[$currentPlayer]['next'];
+
+      // update turns and rounds
+      $turnCount += 1;
+      $roundCount = $turnOrder[$currentPlayer]['isFirst'] 
+                  ? $roundCount + 1
+                  : $roundCount;
+                  
+      $playerTurn['round'] = $roundCount;
+      $playerTurn['turn'] = $turnCount;
+      $processedLog[] = $playerTurn;
+    }
+
+    return $processedLog;
   }
 }
