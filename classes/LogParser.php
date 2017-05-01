@@ -15,9 +15,26 @@ class LogParser {
     $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
     $this->log = $this->cleanLog($this->log);
     $this->log = $this->separateLogByTurn($this->log);
-    
+    $this->log = $this->determineRounds($this->log, $this->playerInfo);
     echo json_encode($this->log);
   }
+
+  private function extractPlayerInfo($playerInfo) {
+    $processedPlayerInfo = array();
+
+    foreach($playerInfo as $player) {
+      if(!empty($player)) {
+        $temp = explode(',', $player);
+        $processedPlayerInfo[] = array(
+          'name' => $temp[0],
+          'color' => $temp[1],
+          'order' => $temp[2],
+        );
+      }
+    }
+
+    return $processedPlayerInfo;
+  } 
 
   // pulls text out of html
   private function parseHTML($rawLog) {
