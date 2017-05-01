@@ -504,6 +504,16 @@ class LogParser {
           'targetHexID',
         ),
       ),
+      array(
+        'name' => 'prebattleBombard',
+        'pattern' => '/Rolling for pre-battle artillery/',
+        'data' => array(),
+      ),
+      array(
+        'name' => 'startBattleRounds',
+        'pattern' => '/Beginning battle rounds/',
+        'data' => array(),
+      )
     );
 
     foreach($log as &$playerTurn) {
@@ -535,8 +545,10 @@ class LogParser {
     if(preg_match($pattern, $actionString, $matches) === 1) {
       $result['type'] = $actionName;
 
-      for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
-        $result[$data[$index]] = $matches[$index + 1];
+      if(count($data) > 1) {
+        for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
+          $result[$data[$index]] = $matches[$index + 1];
+        }
       }
 
       return $result;
