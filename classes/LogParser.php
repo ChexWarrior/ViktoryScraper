@@ -53,7 +53,7 @@ class LogParser {
 
         // if font we need to extract the color
         if($childTag == 'font') {
-          $text .= "[{$child->getAttribute('style')}]: {$child->text}";
+          $text .= " [{$child->getAttribute('style')}] {$child->text}";
         } else {
           $text .= trim($child->text);
         }
@@ -91,9 +91,10 @@ class LogParser {
 
       if(!empty(trim($action))) {
         $action = str_replace('&nbsp;', ' ', $action);
-        $action = preg_replace('/\,{2,}/', '', $action);
+        $action = str_replace(',', '', $action);
         $action = str_replace(' - ', '', $action);
         $action = str_replace('color:', '', $action);
+        $action = preg_replace('/\s{2,}/', ' ', $action);
 
         if(preg_match('/(#[A-Z0-9]+)/', $action, $matches) === 1) {
           $action = str_replace($matches[1], $this->matchHexCodeToColor($matches[1]), $action);
@@ -373,7 +374,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical and ([0-9]+) nontactical hits?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical and ([0-9]+) non-?tactical hits?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -382,7 +383,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical hits?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical hits?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -390,7 +391,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) nontactical hits?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) non-?tactical hits?/',
         'data' => array(
           'unitAmount',
           'nontacticalHits',
@@ -398,7 +399,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) nontactical hits? supp?ressing ([0-9]+) defensive rolls?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) non-?tactical hits? supp?ressing ([0-9]+) defensive rolls?/',
         'data' => array(
           'unitAmount',
           'nontacticalHits',
@@ -407,7 +408,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical hits? supp?ressing ([0-9]+) defensive rolls?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical hits? supp?ressing ([0-9]+) defensive rolls?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -416,7 +417,7 @@ class LogParser {
       ),
       array(
         'name' => 'attackRoll',
-        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical and ([0-9]+) nontactical hits? supp?ressing ([0-9]+) defensive rolls?\./',
+        'pattern' => '/([0-9]+) attacking units? rolled scoring ([0-9]+) tactical and ([0-9]+) non-?tactical hits? supp?ressing ([0-9]+) defensive rolls?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -433,7 +434,7 @@ class LogParser {
       ),
       array(
         'name' => 'defenderRoll',
-        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) tactical and ([0-9]+) nontactical hits?\./',
+        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) tactical and ([0-9]+) non-?tactical hits?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -442,7 +443,7 @@ class LogParser {
       ),
       array(
         'name' => 'defenderRoll',
-        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) tactical hits?\./',
+        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) tactical hits?/',
         'data' => array(
           'unitAmount',
           'tacticalHits',
@@ -450,7 +451,7 @@ class LogParser {
       ),
       array(
         'name' => 'defenderRoll',
-        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) nontactical hits?\./',
+        'pattern' => '/([0-9]+) defending units? rolled scoring ([0-9]+) non-?tactical hits?/',
         'data' => array(
           'unitAmount',
           'nontacticalHits',
