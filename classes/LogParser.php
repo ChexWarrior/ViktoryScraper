@@ -120,8 +120,10 @@ class LogParser {
     return $color;
   }
 
-  //Added to catch bug discovered in log of game, where in the log a player had
-  //two end of turn statements (the two log statements were also out of order)
+  /**
+   * Added to catch bug discovered in log of game, where in the log a player had
+   * two end of turn statements (the two log statements were also out of order)
+   */
   private function checkLogForDuplicateEndOfTurnErrors($log) {
     $turnStartPattern = '/^BEGINNING OF TURN for ([a-zA-Z]+)/';
     $turnEndPattern = '/^END OF TURN/';
@@ -129,8 +131,7 @@ class LogParser {
     for($index = 0; $index < count($log) - 1; $index += 1) {
       $nextLog = $log[$index + 1];
 
-      //check that everytime we get the end of turn pattern the next line is the start
-      //turn pattern
+      // check that everytime we get the end of turn pattern the next line is the start turn pattern
       if(preg_match($turnEndPattern, $log[$index]) === 1) {
         if(preg_match($turnStartPattern, $nextLog) !== 1) {
           $log[$index] = "";
