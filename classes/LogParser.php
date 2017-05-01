@@ -5,8 +5,10 @@ use PHPHtmlParser\Dom;
 class LogParser {
 
   private $log;
+  private $playerInfo;
 
-  public function __construct($rawLog) {
+  public function __construct($rawLog, $rawPlayerInfo) {
+    $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
     $this->log = $rawLog;
     $this->log = $this->parseHTML($this->log);
     $this->log = $this->separateLogByAction($this->log);
