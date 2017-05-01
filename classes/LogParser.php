@@ -153,7 +153,7 @@ class LogParser {
       if(preg_match($turnStartPattern, $action, $matches) === 1) {
         $turnCount += 1;
         $newLog[$turnCount] = array(
-          'player' => $matches[1],
+          'color' => $matches[1],
           'turn' => $turnCount,
           'actions' => array(),
         );
