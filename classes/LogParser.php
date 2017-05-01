@@ -67,15 +67,57 @@ class LogParser {
     $newLog = array();
 
     foreach($log as $action) {
+      $matches = array();
+
       if(!empty(trim($action))) {
         $action = str_replace('&nbsp;', ' ', $action);
         $action = preg_replace('/\,{2,}/', '', $action);
         $action = str_replace(' - ', '', $action);
+        $action = str_replace('color:', '', $action);
+
+        if(preg_match('/(#[A-Z0-9]+)/', $action, $matches) === 1) {
+          $action = str_replace($matches[1], $this->matchHexCodeToColor($matches[1]), $action);
+        }
+
         $newLog[] = $action;
       }
     }
 
     return $newLog;
+  }
+
+  private function matchHexCodeToColor($hexCode) {
+    $color = "";
+    switch($hexCode) {
+      case "#BFBF00":
+        $color = "Yellow";
+        break;
+      case "#BF0000":
+        $color = "Red";
+        break;
+      case "#00BF00":
+        $color = "Green";
+        break;
+      case "#00BFBF":
+        $color = "Cyan";
+        break;
+      case "#0000BF":
+        $color = "Blue";
+        break;
+      case "#BF00BF":
+        $color = "Magenta";
+        break;
+      case "#FF8040":
+        $color = "Orange";
+        break;
+      case "#AE5E5E":
+        $color = "Brown";
+        break;
+      case "#080808":
+        $color = "Black";
+    }
+
+    return $color;
   }
 
   //Added to catch bug discovered in log of game, where in the log a player had
