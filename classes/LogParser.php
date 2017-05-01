@@ -16,7 +16,7 @@ class LogParser {
     $this->log = $this->cleanLog($this->log);
     $this->log = $this->groupActionsByPlayer($this->log);
     $this->log = $this->determineGameTime($this->log, $this->playerInfo);
-    $this->log = $this->parseNonBattleActions($this->log);
+    $this->log = $this->parseActions($this->log);
     echo json_encode($this->log);
   }
 
@@ -247,7 +247,7 @@ class LogParser {
   /**
    * Uses regex to extract info of non-battle actions
    */
-  private function parseNonBattleActions($log) {
+  private function parseActions($log) {
     $playerActions = array(
       array(
         'name' => 'revealedHexes',
@@ -510,7 +510,7 @@ class LogParser {
       foreach($playerTurn['actions'] as &$action) {
         $origAction = $action;
         foreach($playerActions as $playerAction) {
-          $action = $this->parseNonBattleActionStats(
+          $action = $this->parseActionStats(
               $action,
               $playerAction['pattern'],
               $playerAction['name'],
@@ -528,7 +528,7 @@ class LogParser {
   /**
    * Stores information about each action as array
    */
-  private function parseNonBattleActionStats($actionString, $pattern, $actionName, $data) {
+  private function parseActionStats($actionString, $pattern, $actionName, $data) {
     $matches = array();
     $result = array();
 
