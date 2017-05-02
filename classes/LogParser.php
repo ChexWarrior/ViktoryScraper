@@ -513,7 +513,14 @@ class LogParser {
         'name' => 'startBattleRounds',
         'pattern' => '/Beginning battle rounds/',
         'data' => array(),
-      )
+      ),
+      array(
+        'name' => 'playerWins',
+        'pattern' => '/([a-zA-Z]+) conquers wins the game/',
+        'data' => array(
+          'winner',
+        ),
+      ),
     );
 
     foreach($log as &$playerTurn) {
