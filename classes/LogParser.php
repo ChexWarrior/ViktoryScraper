@@ -545,7 +545,7 @@ class LogParser {
     if(preg_match($pattern, $actionString, $matches) === 1) {
       $result['type'] = $actionName;
 
-      if(count($data) > 1) {
+      if(count($data) > 0) {
         for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
           $result[$data[$index]] = $matches[$index + 1];
         }
