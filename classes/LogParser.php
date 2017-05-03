@@ -92,6 +92,9 @@ class LogParser {
       $matches = array();
 
       if(!empty(trim($action))) {
+
+        if(strpos($action, 'Continuing battle rounds') !== false) continue;
+
         $action = str_replace('&nbsp;', ' ', $action);
         $action = str_replace(',', '', $action);
         $action = str_replace(' - ', '', $action);
@@ -583,13 +586,6 @@ class LogParser {
         $lastAction = ($actionIndex - 1 > -1)
                       ? $currentTurn['actions'][$actionIndex - 1]
                       : false;
-
-        // try {
-        //   echo $currentAction['type'] . PHP_EOL;
-        // } catch (Exception $e) {
-        //   echo 'error' . PHP_EOL;
-        //   var_dump($currentAction);
-        // }
 
         if($currentAction['type'] == 'battleStart') {
         
