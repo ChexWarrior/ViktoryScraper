@@ -17,6 +17,8 @@ class LogParser {
     $this->log = $this->groupActionsByPlayer($this->log);
     $this->log = $this->determineGameTime($this->log, $this->playerInfo);
     $this->log = $this->parseActions($this->log);
+    $battleLog = $this->groupBattleActions($this->log);
+    $this->log = $this->removeOldBattleActions($this->log, $battleLog);
     echo json_encode($this->log);
   }
 
@@ -552,15 +554,283 @@ class LogParser {
     if(preg_match($pattern, $actionString, $matches) === 1) {
       $result['type'] = $actionName;
 
-      if(count($data) > 0) {
+      //if(count($data) > 0) {
         for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
-          $result[$data[$index]] = $matches[$index + 1];
+          $result['data'][$data[$index]] = $matches[$index + 1];
         }
-      }
+      //}
 
       return $result;
     }
 
     return $actionString;
+  }
+
+  private function groupBattleActions($log) {
+    $battleLog = array();
+
+    for($turnIndex = 0; $turnIndex < count($log); $turnIndex += 1) {
+      $currentTurn = $log[$turnIndex];
+      $numberOfActionsInTurn = count($currentTurn['actions']);
+
+      for($actionIndex = 0; $actionIndex < $numberOfActionsInTurn; $actionIndex += 1) {
+        $currentAction = $currentTurn['actions'][$actionIndex];
+
+        $nextAction = ($actionIndex + 1 < $numberOfActionsInTurn) 
+                      ? $currentTurn['actions'][$actionIndex + 1] 
+                      : false;
+
+        $lastAction = ($actionIndex - 1 > -1)
+                      ? $currentTurn['actions'][$actionIndex - 1]
+                      : false;
+
+        // try {
+        //   echo $currentAction['type'] . PHP_EOL;
+        // } catch (Exception $e) {
+        //   echo 'error' . PHP_EOL;
+        //   var_dump($currentAction);
+        // }
+
+        if($currentAction['type'] == 'battleStart') {
+        
+          $battleAction = array(
+            'type' => 'battle',
+            'attacker' => $currentTurn['color'],
+            'defender' => $currentAction['data']['defenderColor'],
+            'targetHexID' => $currentAction['data']['targetHexID'],
+            'preBattleBombard' => array(
+              'valid' => false,
+            ),
+            'retreat' => array(),
+            'rounds' => array(),
+            'numRounds' => -1,
+          );
+
+          // store where in log this action is
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+
+        } else if($currentAction['type'] == 'bombard') {
+          $battleAction = array(
+            'type' => 'bombard',
+            'attacker' => $currentTurn['color'],
+            'attackingUnit' => $currentAction['data']['attackingUnitType'],
+            'defender' => $currentAction['data']['defender'],
+            'sourceHexID' => $currentAction['data']['attackerHexID'],
+            'targetHexID' => $currentAction['data']['defenderHexID'],
+          );
+
+        } else if($currentAction['type'] == 'startBattleRounds') { 
+          $battleAction['preBattleBombard']['valid'] = false;
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+        } else if($currentAction['type'] == 'prebattleBombard') {
+          // indicate that a prebattle bombard did occur in this battle
+          $battleAction['preBattleBombard']['valid'] = true;
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+        } else if(preg_match('/attackRoll/', $currentAction['type']) == 1) {
+          $tacticalHits = !empty($currentAction['data']['tacticalHits']) 
+                          ? $currentAction['data']['tacticalHits'] 
+                          : 0;
+          $nonTacticalHits = !empty($currentAction['data']['nontacticalHits'])
+                             ? $currentAction['data']['nontacticalHits']
+                             : 0;
+
+          if($battleAction['type'] !== 'bombard' && $battleAction['preBattleBombard']['valid']) {
+            $battleAction['preBattleBombard']['attackRoll'] = array(
+              'tacticalHits' => $tacticalHits,
+              'nontacticalHits' => $nonTacticalHits,
+            );
+          } else if($battleAction['type'] !== 'bombard') {
+            $supressedRolls = !empty($currentAction['data']['suppressedRolls'])
+                               ? $currentAction['data']['suppressedRolls']
+                               : 0;
+            $battleAction['numRounds'] += 1;
+            $currentBattleRound = $battleAction['numRounds'];
+            $battleAction['rounds'][$currentBattleRound] = array(
+              'attackRoll' => array(
+                'tacticalHits' => $tacticalHits,
+                'nontacticalHits' => $nonTacticalHits, 
+                'supressedRolls' => $supressedRolls,
+              ),
+              'defenseRoll' => array(),
+              'results' => array(),
+            );
+          // is bombard
+          } else {
+            $battleAction['tacticalHits'] = $tacticalHits;
+            $battleAction['nontacticalHits'] = $nonTacticalHits;
+          }
+
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+
+        } else if(preg_match('/defenderRoll/', $currentAction['type']) == 1) {
+          /**
+           * if the previous action was not an attack roll and this isn't
+           * a pre-battle bombard then the attacker  is 
+           * invading an empty city/town and we need to increment the battle
+           * rounds counter      
+           */
+          if(preg_match('/attackRoll/', $lastAction['type']) !== 1 &&
+              !$battleAction['preBattleBombard']['valid']) {
+            $battleAction['numRounds'] += 1;        
+          }
+
+          $tacticalHits = !empty($currentAction['data']['tacticalHits']) 
+                          ? $currentAction['data']['tacticalHits'] 
+                          : 0;
+          $nonTacticalHits = !empty($currentAction['data']['nontacticalHits'])
+                             ? $currentAction['data']['nontacticalHits']
+                             : 0;
+
+          if(!$battleAction['preBattleBombard']['valid']) {
+            $currentBattleRound = $battleAction['numRounds'];
+            $battleAction['rounds'][$currentBattleRound]['defenseRoll']['tacticalHits'] = 
+              $tacticalHits;
+            $battleAction['rounds'][$currentBattleRound]['defenseRoll']['nontacticalHits'] = 
+              $nonTacticalHits;
+          } else {
+            $battleAction['preBattleBombard']['defenseRoll'] = array(
+              'tacticalHits' => $tacticalHits,
+              'nontacticalHits' => $nonTacticalHits,
+            );
+          }
+          
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+
+        } else if(preg_match('/battleResult/', $currentAction['type']) == 1) {
+        
+          $target = strtolower($currentAction['data']['target']);
+
+          if($battleAction['type'] == 'battle' && !$battleAction['preBattleBombard']['valid']) { 
+            $currentBattleRound = $battleAction['numRounds'];
+          }
+
+          $results = array();
+          $lastAmountLost = '';
+
+          foreach($currentAction['data'] as $key => $value) {
+
+            if(strpos($key, 'amountLost') !== FALSE) {
+              $lastAmountLost = $value;
+            } else if(strpos($key, 'unitType') !== FALSE) {
+              $results[$value] = $lastAmountLost;
+            }
+          }
+
+          if($battleAction['type'] == 'battle' && $battleAction['preBattleBombard']['valid']) {
+            $battleAction['preBattleBombard']['results'] = $results;
+            array_push($battleLog, array(
+              'turnIndex' => $turnIndex,
+              'actionIndex' => $actionIndex,
+              'delete' => true,
+              'replace' => false,
+            ));
+          } else if($battleAction['type'] == 'battle') {
+            $battleAction['rounds'][$currentBattleRound]['results'][$target] = $results;
+            array_push($battleLog, array(
+              'turnIndex' => $turnIndex,
+              'actionIndex' => $actionIndex,
+              'delete' => true,
+              'replace' => false,
+            ));
+            // is bombard
+          } else {
+            $battleAction['results'] = $results;
+            array_push($battleLog, array(
+              'turnIndex' => $turnIndex,
+              'actionIndex' => $actionIndex,
+              'delete' => false,
+              'replace' => $battleAction,
+            ));
+          }
+        }
+        else if(preg_match('/battleEnd/', $currentAction['type']) == 1) {
+        
+          $battleAction['numRounds'] += 1;
+          $battleAction['victor'] = !empty($currentAction['data']['victor'])
+                                    ? $currentAction['data']['victor']
+                                    : '';
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => false,
+            'replace' => $battleAction,
+          ));
+        }
+        else if(preg_match('/retreat/', $currentAction['type']) == 1) {
+          
+          if($lastAction && $lastAction['type'] !== 'retreat') {
+            $retreatCount = 1;
+          } else {
+            $retreatCount += 1;
+          }
+
+          $battleAction['retreat'][$retreatCount] = array(
+            'unit' => $currentAction['data']['unitType'],
+            'target hex id' => $currentAction['data']['targetHexID'],
+          );
+
+          if($nextAction['type'] !== 'retreat') {
+            array_push($battleLog, array(
+              'turnIndex' => $turnIndex,
+              'actionIndex' => $actionIndex,
+              'delete' => false,
+              'replace' => $battleAction,
+            ));
+          } else {
+            array_push($battleLog, array(
+              'turnIndex' => $turnIndex,
+              'actionIndex' => $actionIndex,
+              'delete' => true,
+              'replace' => false,
+            ));
+          }
+        } 
+      }
+    }
+
+    return $battleLog;
+  }
+
+  private function removeOldBattleActions($log, $battleLog) {
+
+    foreach($battleLog as $entry) {
+      if($entry['delete']) {
+        unset($log[$entry['turnIndex']]['actions'][$entry['actionIndex']]);
+      } else if(is_array($entry['replace'])) {
+        $log[$entry['turnIndex']]['actions'][$entry['actionIndex']] = $entry['replace'];
+      }
+    }
+
+    // remove numeric keys from action arrays
+    foreach($log as &$playerTurn) {
+      $playerTurn['actions'] = array_values($playerTurn['actions']);
+    }
+
+    return $log;
   }
 }
