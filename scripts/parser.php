@@ -552,11 +552,9 @@ function parseActionStats($actionString, $pattern, $actionName, $data) {
   if(preg_match($pattern, $actionString, $matches) === 1) {
     $result['type'] = $actionName;
 
-    //if(count($data) > 0) {
-      for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
-        $result['data'][$data[$index]] = $matches[$index + 1];
-      }
-    //}
+    for($index = 0; $index < count($data) && $index < count($matches) - 1; $index += 1) {
+      $result[$data[$index]] = $matches[$index + 1];
+    }
 
     return $result;
   }
@@ -587,8 +585,8 @@ function groupBattleActions($log) {
         $battleAction = array(
           'type' => 'battle',
           'attacker' => $currentTurn['color'],
-          'defender' => $currentAction['data']['defenderColor'],
-          'targetHexID' => $currentAction['data']['targetHexID'],
+          'defender' => $currentAction['defenderColor'],
+          'targetHexID' => $currentAction['targetHexID'],
           'preBattleBombard' => array(
             'valid' => false,
           ),
@@ -609,10 +607,10 @@ function groupBattleActions($log) {
         $battleAction = array(
           'type' => 'bombard',
           'attacker' => $currentTurn['color'],
-          'attackingUnit' => $currentAction['data']['attackingUnitType'],
-          'defender' => $currentAction['data']['defender'],
-          'sourceHexID' => $currentAction['data']['attackerHexID'],
-          'targetHexID' => $currentAction['data']['defenderHexID'],
+          'attackingUnit' => $currentAction['attackingUnitType'],
+          'defender' => $currentAction['defender'],
+          'sourceHexID' => $currentAction['attackerHexID'],
+          'targetHexID' => $currentAction['defenderHexID'],
         );
 
         array_push($battleLog, array(
@@ -640,11 +638,11 @@ function groupBattleActions($log) {
           'replace' => false,
         ));
       } else if(preg_match('/attackRoll/', $currentAction['type']) == 1) {
-        $tacticalHits = !empty($currentAction['data']['tacticalHits']) 
-                        ? $currentAction['data']['tacticalHits'] 
+        $tacticalHits = !empty($currentAction['tacticalHits']) 
+                        ? $currentAction['tacticalHits'] 
                         : 0;
-        $nonTacticalHits = !empty($currentAction['data']['nontacticalHits'])
-                           ? $currentAction['data']['nontacticalHits']
+        $nonTacticalHits = !empty($currentAction['nontacticalHits'])
+                           ? $currentAction['nontacticalHits']
                            : 0;
 
         if($battleAction['type'] !== 'bombard' && $battleAction['preBattleBombard']['valid']) {
@@ -653,8 +651,8 @@ function groupBattleActions($log) {
             'nontacticalHits' => $nonTacticalHits,
           );
         } else if($battleAction['type'] !== 'bombard') {
-          $supressedRolls = !empty($currentAction['data']['suppressedRolls'])
-                             ? $currentAction['data']['suppressedRolls']
+          $supressedRolls = !empty($currentAction['suppressedRolls'])
+                             ? $currentAction['suppressedRolls']
                              : 0;
           $battleAction['numRounds'] += 1;
           $currentBattleRound = $battleAction['numRounds'];
@@ -692,11 +690,11 @@ function groupBattleActions($log) {
           $battleAction['numRounds'] += 1;        
         }
 
-        $tacticalHits = !empty($currentAction['data']['tacticalHits']) 
-                        ? $currentAction['data']['tacticalHits'] 
+        $tacticalHits = !empty($currentAction['tacticalHits']) 
+                        ? $currentAction['tacticalHits'] 
                         : 0;
-        $nonTacticalHits = !empty($currentAction['data']['nontacticalHits'])
-                           ? $currentAction['data']['nontacticalHits']
+        $nonTacticalHits = !empty($currentAction['nontacticalHits'])
+                           ? $currentAction['nontacticalHits']
                            : 0;
 
         if(!$battleAction['preBattleBombard']['valid']) {
@@ -721,7 +719,7 @@ function groupBattleActions($log) {
 
       } else if(preg_match('/battleResult/', $currentAction['type']) == 1) {
       
-        $target = strtolower($currentAction['data']['target']);
+        $target = strtolower($currentAction['target']);
 
         if($battleAction['type'] == 'battle' && !$battleAction['preBattleBombard']['valid']) { 
           $currentBattleRound = $battleAction['numRounds'];
@@ -730,7 +728,7 @@ function groupBattleActions($log) {
         $results = array();
         $lastAmountLost = '';
 
-        foreach($currentAction['data'] as $key => $value) {
+        foreach($currentAction as $key => $value) {
 
           if(strpos($key, 'amountLost') !== FALSE) {
             $lastAmountLost = $value;
@@ -769,8 +767,8 @@ function groupBattleActions($log) {
       else if(preg_match('/battleEnd/', $currentAction['type']) == 1) {
       
         $battleAction['numRounds'] += 1;
-        $battleAction['victor'] = !empty($currentAction['data']['victor'])
-                                  ? $currentAction['data']['victor']
+        $battleAction['victor'] = !empty($currentAction['victor'])
+                                  ? $currentAction['victor']
                                   : '';
         array_push($battleLog, array(
           'turnIndex' => $turnIndex,
@@ -788,8 +786,8 @@ function groupBattleActions($log) {
         }
 
         $battleAction['retreat'][$retreatCount] = array(
-          'unit' => $currentAction['data']['unitType'],
-          'target hex id' => $currentAction['data']['targetHexID'],
+          'unit' => $currentAction['unitType'],
+          'target hex id' => $currentAction['targetHexID'],
         );
 
         if($nextAction['type'] !== 'retreat') {
