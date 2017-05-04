@@ -54,7 +54,6 @@ class LogParserTest extends TestCase {
     );
 
     $results = parseActions($log);
-
     $this->assertEquals($results[0]['actions'][0]['type'], 'revealedHexes');
     $this->assertEquals($results[0]['actions'][0]['amount'], '10');
     $this->assertEquals($results[0]['actions'][1]['type'], 'revealedHexes');
