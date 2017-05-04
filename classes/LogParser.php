@@ -620,6 +620,13 @@ class LogParser {
             'targetHexID' => $currentAction['data']['defenderHexID'],
           );
 
+          array_push($battleLog, array(
+            'turnIndex' => $turnIndex,
+            'actionIndex' => $actionIndex,
+            'delete' => true,
+            'replace' => false,
+          ));
+
         } else if($currentAction['type'] == 'startBattleRounds') { 
           $battleAction['preBattleBombard']['valid'] = false;
           array_push($battleLog, array(
