@@ -2,7 +2,8 @@
     "name": "andy/viktory-scraper-ii",
     "type": "project",
     "require": {
-        "paquettg/php-html-parser": "^1.7"
+        "paquettg/php-html-parser": "^1.7",
+        "phpunit/phpunit": "^6.1"
     },
     "authors": [
         {
