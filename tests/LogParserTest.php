@@ -42,4 +42,22 @@ class LogParserTest extends TestCase {
     $this->assertEquals(4, end($results)['round']);
     $this->assertEquals(8, end($results)['turn']);
   }
+
+  public function testParseActions() {
+    $log = array(
+      array(
+        'actions' => array(
+          'Revealed 10 hexes',
+          'Revealed 1000 hex',
+        ),
+      )   
+    );
+
+    $results = parseActions($log);
+
+    $this->assertEquals($results[0]['actions'][0]['type'], 'revealedHexes');
+    $this->assertEquals($results[0]['actions'][0]['amount'], '10');
+    $this->assertEquals($results[0]['actions'][1]['type'], 'revealedHexes');
+    $this->assertEquals($results[0]['actions'][1]['amount'], '1000');
+  }
 }
