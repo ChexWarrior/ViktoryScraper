@@ -40,5 +40,6 @@ class LogParserTest extends TestCase {
 
     $results = determineGameTime($log, $playerInfo);
     $this->assertEquals(4, end($results)['round']);
+    $this->assertEquals(8, end($results)['turn']);
   }
 }
