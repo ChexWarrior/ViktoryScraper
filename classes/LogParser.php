@@ -738,7 +738,7 @@ class LogParser {
           }
 
           if($battleAction['type'] == 'battle' && $battleAction['preBattleBombard']['valid']) {
-            $battleAction['preBattleBombard']['results'] = $results;
+            $battleAction['preBattleBombard']['results'][$target] = $results;
             array_push($battleLog, array(
               'turnIndex' => $turnIndex,
               'actionIndex' => $actionIndex,
