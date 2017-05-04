@@ -4,22 +4,28 @@ use PHPHtmlParser\Dom;
 
 class LogParser {
 
-  public static function parseLog($rawLog, $rawPlayerInfo) {
-    $playerInfo = LogParser::extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
-    $log = LogParser::parseHTML($rawLog);
-    $log = LogParser::separateLogByAction($log);
-    $log = LogParser::checkLogForDuplicateEndOfTurnErrors($log);
-    $log = LogParser::cleanLog($log);
-    $log = LogParser::groupActionsByPlayer($log);
-    $log = LogParser::determineGameTime($log, $playerInfo);
-    $log = LogParser::parseActions($log);
-    $battleLog = LogParser::groupBattleActions($log);
-    $log = LogParser::removeOldBattleActions($log, $battleLog);
-
-    return $log;
+  public function __construct($rawLog, $rawPlayerInfo, $gameUrl) {
+    $this->log = $rawLog;
+    $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
+    //$this->gameID = $this->extractGameId($gameUrl);
+    $this->log = $this->parseHTML($this->log);
+    $this->log = $this->separateLogByAction($this->log);
+    $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
+    $this->log = $this->cleanLog($this->log);
+    $this->log = $this->groupActionsByPlayer($this->log);
+    $this->log = $this->determineGameTime($this->log, $this->playerInfo);
+    $this->log = $this->parseActions($this->log);
+    $battleLog = $this->groupBattleActions($this->log);
+    $this->log = $this->removeOldBattleActions($this->log, $battleLog);
   }
 
-  public static function extractPlayerInfo($playerInfo) {
+  public function getRounds() {
+    return $this->log;
+  }
+
+  //public function 
+
+  public function extractPlayerInfo($playerInfo) {
     $processedPlayerInfo = array();
 
     foreach($playerInfo as $player) {
@@ -37,7 +43,7 @@ class LogParser {
   } 
 
   // pulls text out of html
-  public static function parseHTML($rawLog) {
+  public function parseHTML($rawLog) {
     $dom = new Dom;
     $log = array();
 
@@ -71,7 +77,7 @@ class LogParser {
     return $log;
   }
 
-  public static function separateLogByAction($log) {
+  public function separateLogByAction($log) {
     $newLog = array();
 
     foreach($log as $line) {
@@ -82,7 +88,7 @@ class LogParser {
     return $newLog;
   }
 
-  public static function cleanLog($log) {
+  public function cleanLog($log) {
     $newLog = array();
 
     foreach($log as $action) {
@@ -99,7 +105,7 @@ class LogParser {
         $action = preg_replace('/\s{2,}/', ' ', $action);
 
         if(preg_match('/(#[A-Z0-9]+)/', $action, $matches) === 1) {
-          $action = str_replace($matches[1], LogParser::matchHexCodeToColor($matches[1]), $action);
+          $action = str_replace($matches[1], $this->matchHexCodeToColor($matches[1]), $action);
         }
 
         $newLog[] = $action;
@@ -109,7 +115,7 @@ class LogParser {
     return $newLog;
   }
 
-  public static function matchHexCodeToColor($hexCode) {
+  public function matchHexCodeToColor($hexCode) {
     $color = "";
     switch($hexCode) {
       case "#BFBF00":
@@ -147,7 +153,7 @@ class LogParser {
    * Added to catch bug discovered in log of game, where in the log a player had
    * two end of turn statements (the two log statements were also out of order)
    */
-  public static function checkLogForDuplicateEndOfTurnErrors($log) {
+  public function checkLogForDuplicateEndOfTurnErrors($log) {
     $turnStartPattern = '/^BEGINNING OF TURN for ([a-zA-Z]+)/';
     $turnEndPattern = '/^END OF TURN/';
 
@@ -165,7 +171,7 @@ class LogParser {
     return $log;
   }
 
-  public static function groupActionsByPlayer($log) {
+  public function groupActionsByPlayer($log) {
     $newLog = array();
     $turnStartPattern = '/^BEGINNING OF TURN for ([a-zA-Z]+)/';
     $turnCount = -1;
@@ -187,7 +193,7 @@ class LogParser {
     return $newLog;
   }
 
-  public static function determineGameTime($log, $playerInfo) {
+  public function determineGameTime($log, $playerInfo) {
     $turnCount = 0;
     $roundCount = 0;
     $turnOrder = array();
@@ -249,7 +255,7 @@ class LogParser {
   /**
    * Uses regex to extract info of non-battle actions
    */
-  public static function parseActions($log) {
+  public function parseActions($log) {
     $playerActions = array(
       array(
         'name' => 'revealedHexes',
@@ -529,7 +535,7 @@ class LogParser {
       foreach($playerTurn['actions'] as &$action) {
         $origAction = $action;
         foreach($playerActions as $playerAction) {
-          $action = LogParser::parseActionStats(
+          $action = $this->parseActionStats(
             $action,
             $playerAction['pattern'],
             $playerAction['name'],
@@ -547,7 +553,7 @@ class LogParser {
   /**
    * Stores information about each action as array
    */
-  public static function parseActionStats($actionString, $pattern, $actionName, $data) {
+  public function parseActionStats($actionString, $pattern, $actionName, $data) {
     $matches = array();
     $result = array();
 
@@ -564,7 +570,7 @@ class LogParser {
     return $actionString;
   }
 
-  public static function groupBattleActions($log) {
+  public function groupBattleActions($log) {
     $battleLog = array();
 
     for($turnIndex = 0; $turnIndex < count($log); $turnIndex += 1) {
@@ -814,7 +820,7 @@ class LogParser {
     return $battleLog;
   }
 
-  public static function removeOldBattleActions($log, $battleLog) {
+  public function removeOldBattleActions($log, $battleLog) {
 
     foreach($battleLog as $entry) {
       if($entry['delete']) {
