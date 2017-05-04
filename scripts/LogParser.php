@@ -7,7 +7,9 @@ class LogParser {
   public function __construct($rawLog, $rawPlayerInfo, $gameUrl) {
     $this->log = $rawLog;
     $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
-    //$this->gameID = $this->extractGameId($gameUrl);
+    $this->gameID = $this->extractGameId($gameUrl);
+    
+    // parse logs
     $this->log = $this->parseHTML($this->log);
     $this->log = $this->separateLogByAction($this->log);
     $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
@@ -17,6 +19,17 @@ class LogParser {
     $this->log = $this->parseActions($this->log);
     $battleLog = $this->groupBattleActions($this->log);
     $this->log = $this->removeOldBattleActions($this->log, $battleLog);
+  }
+
+  public function extractGameId($gameUrl) {
+    $matches = array();
+    $pattern = '/https?:\/\/gamesbyemail\.com\/Games\/Play\?([0-9]+)/';
+    
+    if(preg_match($pattern, $gameUrl, $matches) === 1) {
+      return $matches[1];
+    } else {
+      return null;
+    }
   }
 
   public function getRounds() {
