@@ -1,7 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
 define('ROOT', dirname(dirname(__FILE__)));
-require_once(ROOT . '/scripts/parser.php');
+require_once(ROOT . '/scripts/LogParser.php');
 
 class LogParserTest extends TestCase {
   public function testDetermineGameTime() {
@@ -38,7 +38,7 @@ class LogParserTest extends TestCase {
       array('color' => 'Blue'),
     );
 
-    $results = determineGameTime($log, $playerInfo);
+    $results = LogParser::determineGameTime($log, $playerInfo);
     $this->assertEquals(4, end($results)['round']);
     $this->assertEquals(8, end($results)['turn']);
   }
@@ -53,7 +53,7 @@ class LogParserTest extends TestCase {
       )   
     );
 
-    $results = parseActions($log);
+    $results = LogParser::parseActions($log);
     $this->assertEquals($results[0]['actions'][0]['type'], 'revealedHexes');
     $this->assertEquals($results[0]['actions'][0]['amount'], '10');
     $this->assertEquals($results[0]['actions'][1]['type'], 'revealedHexes');
