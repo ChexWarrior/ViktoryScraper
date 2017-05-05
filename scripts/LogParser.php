@@ -4,10 +4,16 @@ use PHPHtmlParser\Dom;
 
 class LogParser {
 
+  private $log;
+  private $playerInfo;
+  private $gameID;
+  private $game;
+  private $rounds;
+
   public function __construct($rawLog, $rawPlayerInfo, $gameUrl) {
     $this->log = $rawLog;
     $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
-    $this->gameID = $this->extractGameId($gameUrl);
+    $this->gameID = $this->extractGameID($gameUrl);
     
     // parse logs
     $this->log = $this->parseHTML($this->log);
@@ -19,9 +25,15 @@ class LogParser {
     $this->log = $this->parseActions($this->log);
     $battleLog = $this->groupBattleActions($this->log);
     $this->log = $this->removeOldBattleActions($this->log, $battleLog);
+
+    // create rounds object
+    $this->rounds = $this->groupLogByRounds($this->log, $this->gameID);
+
+    // create game object
+    $this->game = $this->createGame();
   }
 
-  public function extractGameId($gameUrl) {
+  public function extractGameID($gameUrl) {
     $matches = array();
     $pattern = '/https?:\/\/gamesbyemail\.com\/Games\/Play\?([0-9]+)/';
     
@@ -33,10 +45,46 @@ class LogParser {
   }
 
   public function getRounds() {
-    return $this->log;
+    return $this->rounds;
   }
 
-  //public function 
+  public function getGame() {
+    return $this->game;
+  }
+
+  public function createGame() {
+    return array(
+      '_id' => $this->gameID,
+      'players' => $this->playerInfo,
+      'rounds' => count($this->rounds),
+    );
+  }
+
+  public function groupLogByRounds($log, $gameID) {
+    $rounds = array();
+    $currentRound = 1;
+    $round = array(
+      'id' => $currentRound,
+      'gameID' => $gameID,
+      'turns' => array(),
+    );
+
+    foreach($log as $turn) {
+      if($turn['round'] == $currentRound) {
+        $round['turns'][] = $turn;
+      } else {
+        $rounds[] = $round;
+        $currentRound += 1;
+        $round = array(
+          'id' => $currentRound,
+          'gameID' => $gameID,
+        );
+        $round['turns'][] = $turn;
+      }
+    }
+
+    return $rounds;
+  }
 
   public function extractPlayerInfo($playerInfo) {
     $processedPlayerInfo = array();
