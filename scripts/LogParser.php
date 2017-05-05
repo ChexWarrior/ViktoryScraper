@@ -30,7 +30,7 @@ class LogParser {
     $this->rounds = $this->groupLogByRounds($this->log, $this->gameID);
 
     // create game object
-    $this->game = $this->createGame();
+    $this->game = $this->createGame($this->gameID, $this->playerInfo, count($this->rounds));
   }
 
   public function extractGameID($gameUrl) {
@@ -52,11 +52,11 @@ class LogParser {
     return $this->game;
   }
 
-  public function createGame() {
+  public function createGame($gameID, $players, $numRounds) {
     return array(
-      '_id' => $this->gameID,
-      'players' => $this->playerInfo,
-      'rounds' => count($this->rounds),
+      '_id' => $gameID,
+      'players' => $players,
+      'rounds' => $numRounds,
     );
   }
 
