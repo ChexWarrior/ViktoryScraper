@@ -10,27 +10,30 @@ class LogParser {
   private $game;
   private $rounds;
 
-  public function __construct($rawLog, $rawPlayerInfo, $gameUrl) {
-    $this->log = $rawLog;
-    $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
-    $this->gameID = $this->extractGameID($gameUrl);
-    
-    // parse logs
-    $this->log = $this->parseHTML($this->log);
-    $this->log = $this->separateLogByAction($this->log);
-    $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
-    $this->log = $this->cleanLog($this->log);
-    $this->log = $this->groupActionsByPlayer($this->log);
-    $this->log = $this->determineGameTime($this->log, $this->playerInfo);
-    $this->log = $this->parseActions($this->log);
-    $battleLog = $this->groupBattleActions($this->log);
-    $this->log = $this->removeOldBattleActions($this->log, $battleLog);
+  public function __construct($rawLog, $rawPlayerInfo, $gameUrl, $empty = false) {
 
-    // create rounds object
-    $this->rounds = $this->groupLogByRounds($this->log, $this->gameID);
+    if(!$empty) {
+      $this->log = $rawLog;
+      $this->playerInfo = $this->extractPlayerInfo(preg_split('/\r?\n/', $rawPlayerInfo));
+      $this->gameID = $this->extractGameID($gameUrl);
+      
+      // parse logs
+      $this->log = $this->parseHTML($this->log);
+      $this->log = $this->separateLogByAction($this->log);
+      $this->log = $this->checkLogForDuplicateEndOfTurnErrors($this->log);
+      $this->log = $this->cleanLog($this->log);
+      $this->log = $this->groupActionsByPlayer($this->log);
+      $this->log = $this->determineGameTime($this->log, $this->playerInfo);
+      $this->log = $this->parseActions($this->log);
+      $battleLog = $this->groupBattleActions($this->log);
+      $this->log = $this->removeOldBattleActions($this->log, $battleLog);
 
-    // create game object
-    $this->game = $this->createGame($this->gameID, $this->playerInfo, count($this->rounds));
+      // create rounds object
+      $this->rounds = $this->groupLogByRounds($this->log, $this->gameID);
+
+      // create game object
+      $this->game = $this->createGame($this->gameID, $this->playerInfo, count($this->rounds));
+    }
   }
 
   public function extractGameID($gameUrl) {

@@ -38,7 +38,8 @@ class LogParserTest extends TestCase {
       array('color' => 'Blue'),
     );
 
-    $results = LogParser::determineGameTime($log, $playerInfo);
+    $logParser = new LogParser('', '', '', true);
+    $results = $logParser->determineGameTime($log, $playerInfo);
     $this->assertEquals(4, end($results)['round']);
     $this->assertEquals(8, end($results)['turn']);
   }
@@ -53,7 +54,8 @@ class LogParserTest extends TestCase {
       )   
     );
 
-    $results = LogParser::parseActions($log);
+    $logParser = new LogParser('', '', '', true);
+    $results = $logParser->parseActions($log);
     $this->assertEquals($results[0]['actions'][0]['type'], 'revealedHexes');
     $this->assertEquals($results[0]['actions'][0]['amount'], '10');
     $this->assertEquals($results[0]['actions'][1]['type'], 'revealedHexes');
